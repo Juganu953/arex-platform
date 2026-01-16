@@ -1,0 +1,28 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": "api-gateway"
+      },
+      {
+        "source": "/subscription/**",
+        "function": "arex-strategic-growth"
+      },
+      {
+        "source": "/forms/**",
+        "function": "complete-forms-api"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
