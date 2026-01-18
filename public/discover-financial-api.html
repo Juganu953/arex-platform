@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover Financial API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1a237e;
+            text-align: center;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .test-btn {
+            padding: 12px;
+            background: #1a237e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .test-btn:hover {
+            background: #283593;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .success { border-left: 4px solid #4CAF50; }
+        .error { border-left: 4px solid #F44336; }
+        .info { border-left: 4px solid #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Discover Financial API Endpoints</h1>
+        
+        <p>Let's find out what endpoints your financialApi function actually supports:</p>
+        
+        <div class="test-grid">
+            <button class="test-btn" onclick="testEndpoint('/financial')">Test /financial</button>
+            <button class="test-btn" onclick="testEndpoint('/financial/')">Test /financial/</button>
+            <button class="test-btn" onclick="testEndpoint('/financial/summary')">Test /financial/summary</button>
+            <button class="test-btn" onclick="testEndpoint('/financial/summary/')">Test /financial/summary/</button>
+            <button class="test-btn" onclick="testEndpoint('/financial/overview')">Test /financial/overview</button>
+            <button class="test-btn" onclick="testEndpoint('/financial/revenue')">Test /financial/revenue</button>
+            <button class="test-btn" onclick="testEndpoint('/financial/stats')">Test /financial/stats</button>
+            <button class="test-btn" onclick="testEndpoint('/financial/data')">Test /financial/data</button>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="test-btn" onclick="testAllEndpoints()" style="padding: 15px 30px; background: #4CAF50;">
+                🔍 Test All Possible Endpoints
+            </button>
+        </div>
+        
+        <div class="result info" id="result">
+            Click a button to test an endpoint...
+        </div>
+    </div>
+    
+    <script>
+        // Common financial API endpoints to test
+        const endpoints = [
+            '/financial',
+            '/financial/',
+            '/financial/summary',
+            '/financial/summary/',
+            '/financial/overview',
+            '/financial/revenue',
+            '/financial/stats',
+            '/financial/data',
+            '/financial/metrics',
+            '/financial/status',
+            '/financial/health',
+            '/financial/getSummary',
+            '/financial/get-summary',
+            '/financial/api/summary',
+            '/api/financial/summary',
+            '/api/financial',
+            '/api/financial/'
+        ];
+        
+        async function testEndpoint(endpoint) {
+            const resultEl = document.getElementById('result');
+            resultEl.innerHTML = `Testing ${endpoint}...\n\n`;
+            
+            try {
+                const response = await fetch(endpoint);
+                const text = await response.text();
+                
+                resultEl.innerHTML += `
+                    URL: ${endpoint}
+                    Status: ${response.status} ${response.statusText}
+                    
+                    Response:
+                    ${text}
+                `;
+                
+                resultEl.className = response.ok ? 'result success' : 'result error';
+                
+            } catch (error) {
+                resultEl.innerHTML += `
+                    URL: ${endpoint}
+                    
+                    Error:
+                    ${error.message}
+                `;
+                resultEl.className = 'result error';
+            }
+        }
+        
+        async function testAllEndpoints() {
+            const resultEl = document.getElementById('result');
+            resultEl.innerHTML = 'Testing all possible endpoints...\n\n';
+            resultEl.className = 'result info';
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint);
+                    resultEl.innerHTML += `${response.ok ? '✅' : '❌'} ${endpoint}: ${response.status}\n`;
+                } catch (error) {
+                    resultEl.innerHTML += `❌ ${endpoint}: ${error.message}\n`;
+                }
+                
+                // Small delay
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            resultEl.innerHTML += '\n✅ Discovery complete';
+        }
+        
+        // Auto-test a few endpoints
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                testEndpoint('/financial');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

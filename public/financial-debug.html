@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial API Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #1a237e;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .debug-section {
+            margin: 25px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .debug-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a237e;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .test-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .test-btn {
+            padding: 10px 20px;
+            background: #1a237e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .test-btn:hover {
+            background: #283593;
+            transform: translateY(-2px);
+        }
+        
+        .test-btn.success {
+            background: #4CAF50;
+        }
+        
+        .test-btn.error {
+            background: #F44336;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .result-box {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .connected { background: #4CAF50; }
+        .disconnected { background: #F44336; }
+        .unknown { background: #FF9800; }
+        
+        .url-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .url-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .url-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-success { background: #e8f5e9; color: #2e7d32; }
+        .status-error { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Financial API Debugger</h1>
+        
+        <!-- Connection Status -->
+        <div class="debug-section">
+            <div class="debug-title">
+                <span>🔌 Connection Status</span>
+                <span class="status-indicator" id="global-status"></span>
+            </div>
+            <div class="test-buttons">
+                <button class="test-btn" onclick="testBasicConnection()">Test Basic Connection</button>
+                <button class="test-btn" onclick="testAllEndpoints()">Test All Endpoints</button>
+                <button class="test-btn success" onclick="discoverFinancialAPI()">Discover Financial API</button>
+            </div>
+            <div class="results">
+                <div class="result-box" id="connection-result">
+                    Click a test button to begin...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Direct Function Testing -->
+        <div class="debug-section">
+            <div class="debug-title">🎯 Direct Function Testing</div>
+            <p>Test the financialApi function directly (bypassing Firebase Hosting):</p>
+            <div class="test-buttons">
+                <button class="test-btn" onclick="testDirectFunction('GET')">GET Request</button>
+                <button class="test-btn" onclick="testDirectFunction('POST')">POST Request</button>
+                <button class="test-btn" onclick="testDirectFunction('OPTIONS')">OPTIONS (CORS)</button>
+            </div>
+            <div class="results">
+                <div class="result-box" id="direct-result">
+                    Will show direct function response...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Endpoint Discovery Results -->
+        <div class="debug-section" id="discovery-section" style="display: none;">
+            <div class="debug-title">🔍 Discovered Endpoints</div>
+            <ul class="url-list" id="discovered-endpoints">
+                <!-- Will be populated by discovery -->
+            </ul>
+        </div>
+        
+        <!-- Working Dashboard Preview -->
+        <div class="debug-section">
+            <div class="debug-title">📊 Dashboard Preview</div>
+            <p>If we find the correct endpoint, we can display financial data:</p>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #2e7d32;" id="preview-revenue">KES 0</div>
+                    <div style="font-size: 12px; color: #666;">Total Revenue</div>
+                </div>
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #1565c0;" id="preview-agents">0</div>
+                    <div style="font-size: 12px; color: #666;">Active Agents</div>
+                </div>
+            </div>
+            <button class="test-btn success" onclick="loadFinancialDashboard()" id="load-dashboard-btn" disabled>
+                Load Dashboard Data
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const projectId = 'arex-platform-7d3cb';
+        const directFunctionUrl = `https://us-central1-${projectId}.cloudfunctions.net/financialApi`;
+        
+        // Possible financial endpoints to try
+        const possibleEndpoints = [
+            '/financial',
+            '/financial/',
+            '/financial/summary',
+            '/financial/overview',
+            '/financial/revenue',
+            '/financial/stats',
+            '/financial/data',
+            '/financial/metrics',
+            '/financial/status',
+            '/api/financial',
+            '/api/financial/summary',
+            '/api/financial/overview',
+            '/finance',
+            '/finance/',
+            '/finance/summary',
+            '/revenue',
+            '/revenue/',
+            '/revenue/summary',
+            '/revenue/overview'
+        ];
+        
+        // Update global status
+        function updateGlobalStatus(status) {
+            const indicator = document.getElementById('global-status');
+            indicator.className = 'status-indicator ' + status;
+        }
+        
+        // Test basic connection
+        async function testBasicConnection() {
+            const resultEl = document.getElementById('connection-result');
+            resultEl.textContent = 'Testing connection to /health...';
+            updateGlobalStatus('unknown');
+            
+            try {
+                const response = await fetch('/health');
+                const text = await response.text();
+                
+                if (response.ok) {
+                    resultEl.textContent = `✅ Health endpoint working!\n\nResponse: ${text}`;
+                    updateGlobalStatus('connected');
+                } else {
+                    resultEl.textContent = `❌ Health endpoint returned ${response.status}\n\nResponse: ${text}`;
+                    updateGlobalStatus('disconnected');
+                }
+            } catch (error) {
+                resultEl.textContent = `❌ Connection failed: ${error.message}`;
+                updateGlobalStatus('disconnected');
+            }
+        }
+        
+        // Test all possible endpoints
+        async function testAllEndpoints() {
+            const resultEl = document.getElementById('connection-result');
+            resultEl.textContent = 'Testing all possible financial endpoints...\n\n';
+            updateGlobalStatus('unknown');
+            
+            const discovered = [];
+            
+            for (const endpoint of possibleEndpoints) {
+                try {
+                    const response = await fetch(endpoint);
+                    resultEl.textContent += `${response.ok ? '✅' : '❌'} ${endpoint}: ${response.status}\n`;
+                    
+                    if (response.ok) {
+                        discovered.push({
+                            endpoint: endpoint,
+                            status: response.status,
+                            working: true
+                        });
+                    }
+                } catch (error) {
+                    resultEl.textContent += `❌ ${endpoint}: ${error.message}\n`;
+                }
+                
+                // Small delay
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            resultEl.textContent += '\n✅ Discovery complete';
+            
+            // Show discovered endpoints
+            if (discovered.length > 0) {
+                showDiscoveredEndpoints(discovered);
+                updateGlobalStatus('connected');
+            } else {
+                updateGlobalStatus('disconnected');
+            }
+        }
+        
+        // Discover financial API
+        async function discoverFinancialAPI() {
+            const resultEl = document.getElementById('connection-result');
+            resultEl.textContent = '🔍 Discovering financial API structure...\n\n';
+            
+            const discovered = [];
+            
+            // Test common patterns
+            const patterns = [
+                '/financial',
+                '/financial/summary',
+                '/financial/overview',
+                '/api/financial'
+            ];
+            
+            for (const pattern of patterns) {
+                // Test with different methods
+                const methods = ['GET', 'POST'];
+                
+                for (const method of methods) {
+                    try {
+                        const response = await fetch(pattern, {
+                            method: method,
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        resultEl.textContent += `${method} ${pattern}: ${response.status}\n`;
+                        
+                        if (response.ok) {
+                            discovered.push({
+                                endpoint: pattern,
+                                method: method,
+                                status: response.status,
+                                working: true
+                            });
+                        }
+                    } catch (error) {
+                        resultEl.textContent += `${method} ${pattern}: ❌ ${error.message}\n`;
+                    }
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+            resultEl.textContent += '\n✅ Discovery complete';
+            
+            if (discovered.length > 0) {
+                showDiscoveredEndpoints(discovered);
+                updateGlobalStatus('connected');
+            }
+        }
+        
+        // Show discovered endpoints
+        function showDiscoveredEndpoints(endpoints) {
+            const section = document.getElementById('discovery-section');
+            const list = document.getElementById('discovered-endpoints');
+            
+            section.style.display = 'block';
+            list.innerHTML = '';
+            
+            endpoints.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'url-item';
+                li.innerHTML = `
+                    <div>
+                        <strong>${item.endpoint}</strong>
+                        <div style="font-size: 11px; color: #666;">Method: ${item.method || 'GET'}</div>
+                    </div>
+                    <div class="url-status status-success">✅ HTTP ${item.status}</div>
+                `;
+                
+                // Make clickable to test
+                li.style.cursor = 'pointer';
+                li.onclick = () => testDiscoveredEndpoint(item.endpoint, item.method);
+                
+                list.appendChild(li);
+            });
+            
+            // Enable dashboard button
+            document.getElementById('load-dashboard-btn').disabled = false;
+        }
+        
+        // Test a discovered endpoint
+        async function testDiscoveredEndpoint(endpoint, method = 'GET') {
+            const resultEl = document.getElementById('connection-result');
+            resultEl.textContent = `Testing ${method} ${endpoint}...\n\n`;
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                resultEl.textContent = `
+                    ${method} ${endpoint}
+                    Status: ${response.status} ${response.statusText}
+                    
+                    Response:
+                    ${text}
+                `;
+                
+                // Try to parse as JSON for dashboard
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        updateDashboardPreview(data);
+                    } catch (e) {
+                        // Not JSON, that's OK
+                    }
+                }
+                
+            } catch (error) {
+                resultEl.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        // Test function directly
+        async function testDirectFunction(method) {
+            const resultEl = document.getElementById('direct-result');
+            resultEl.textContent = `${method} ${directFunctionUrl}\n\nLoading...`;
+            
+            try {
+                const response = await fetch(directFunctionUrl, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                resultEl.textContent = `
+                    ${method} ${directFunctionUrl}
+                    Status: ${response.status} ${response.statusText}
+                    
+                    Response:
+                    ${text}
+                    
+                    Headers:
+                    ${[...response.headers].map(([k, v]) => `${k}: ${v}`).join('\n')}
+                `;
+                
+            } catch (error) {
+                resultEl.textContent = `
+                    ${method} ${directFunctionUrl}
+                    
+                    Error:
+                    ${error.message}
+                    
+                    This likely means CORS is not configured on the function.
+                    Try using the Firebase Hosting proxy instead.
+                `;
+            }
+        }
+        
+        // Update dashboard preview
+        function updateDashboardPreview(data) {
+            // Try to extract financial data
+            const revenue = data.totalRevenue || data.revenue || data.amount || 0;
+            const agents = data.activeAgents || data.agents || data.agentCount || 0;
+            
+            document.getElementById('preview-revenue').textContent = 
+                'KES ' + revenue.toLocaleString('en-KE');
+            document.getElementById('preview-agents').textContent = agents;
+        }
+        
+        // Load financial dashboard
+        async function loadFinancialDashboard() {
+            const btn = document.getElementById('load-dashboard-btn');
+            btn.innerHTML = 'Loading...';
+            btn.disabled = true;
+            
+            // Try the most likely endpoint first
+            const endpoints = [
+                '/financial/summary',
+                '/financial',
+                '/api/financial',
+                '/financial/overview'
+            ];
+            
+            let success = false;
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint);
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateDashboardPreview(data);
+                        success = true;
+                        
+                        const resultEl = document.getElementById('connection-result');
+                        resultEl.textContent = `✅ Successfully loaded from ${endpoint}\n\nData: ${JSON.stringify(data, null, 2)}`;
+                        break;
+                    }
+                } catch (error) {
+                    continue;
+                }
+            }
+            
+            if (!success) {
+                alert('Could not load financial data from any endpoint');
+            }
+            
+            btn.innerHTML = 'Load Dashboard Data';
+            btn.disabled = false;
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Financial debugger loaded');
+            updateGlobalStatus('unknown');
+            
+            // Auto-run basic tests
+            setTimeout(() => {
+                testBasicConnection();
+                // Test direct function after a delay
+                setTimeout(() => testDirectFunction('GET'), 2000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

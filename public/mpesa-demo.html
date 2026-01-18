@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AREX - M-Pesa Integration Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .mpesa-logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-card {
+            background: white;
+            color: #333;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card-title {
+            color: #1a237e;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1a237e;
+        }
+        
+        .btn {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 1rem;
+            width: 100%;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            background: #283593;
+            transform: translateY(-2px);
+        }
+        
+        .btn.success {
+            background: #4CAF50;
+        }
+        
+        .btn.success:hover {
+            background: #388E3C;
+        }
+        
+        .btn.danger {
+            background: #F44336;
+        }
+        
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+        
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+        
+        .result.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #4CAF50;
+            display: block;
+        }
+        
+        .result.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #F44336;
+            display: block;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .connected { background: #4CAF50; }
+        .disconnected { background: #F44336; }
+        
+        .test-numbers {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 14px;
+            color: #1565c0;
+        }
+        
+        .test-numbers h4 {
+            margin-bottom: 0.5rem;
+            color: #0d47a1;
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="mpesa-logo">💰</div>
+            <h1>AREX M-Pesa Integration</h1>
+            <p>Demo interface for M-Pesa API integration</p>
+            <div style="margin-top: 1rem;">
+                <span class="status-indicator" id="api-status"></span>
+                <span id="status-text">Testing connection...</span>
+            </div>
+        </header>
+        
+        <div class="demo-grid">
+            <!-- STK Push Card -->
+            <div class="demo-card">
+                <h2 class="card-title">📱 STK Push</h2>
+                <p>Request payment from customer via M-Pesa</p>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="text" id="phone" placeholder="07XX XXX XXX" value="254708374149">
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">Amount (KES)</label>
+                    <input type="number" id="amount" placeholder="100" value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reference">Account Reference</label>
+                    <input type="text" id="reference" placeholder="AREX-001" value="AREX-TEST">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" placeholder="Payment description" value="Test payment">
+                </div>
+                
+                <button class="btn success" onclick="initiateSTK()">
+                    📱 Send STK Push
+                </button>
+                
+                <div class="result" id="stk-result"></div>
+            </div>
+            
+            <!-- B2C Payment Card -->
+            <div class="demo-card">
+                <h2 class="card-title">👥 B2C Payment</h2>
+                <p>Send payment to agent/employee</p>
+                
+                <div class="form-group">
+                    <label for="b2c-phone">Agent Phone</label>
+                    <input type="text" id="b2c-phone" placeholder="07XX XXX XXX" value="254708374149">
+                </div>
+                
+                <div class="form-group">
+                    <label for="b2c-amount">Amount (KES)</label>
+                    <input type="number" id="b2c-amount" placeholder="5000" value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="remarks">Remarks</label>
+                    <input type="text" id="remarks" placeholder="Commission payment" value="Test commission">
+                </div>
+                
+                <button class="btn" onclick="initiateB2C()">
+                    💸 Send Payment
+                </button>
+                
+                <div class="result" id="b2c-result"></div>
+            </div>
+            
+            <!-- Test Connection Card -->
+            <div class="demo-card">
+                <h2 class="card-title">🔌 Connection Test</h2>
+                <p>Test M-Pesa API connectivity</p>
+                
+                <div class="test-numbers">
+                    <h4>🧪 Sandbox Test Numbers:</h4>
+                    <p><strong>Phone:</strong> 254708374149</p>
+                    <p><strong>PIN:</strong> 174379</p>
+                    <p><strong>Amount:</strong> Use 1 KES for testing</p>
+                </div>
+                
+                <button class="btn" onclick="testConnection()">
+                    🔍 Test Connection
+                </button>
+                
+                <button class="btn" onclick="checkTransactionStatus()" style="margin-top: 10px;">
+                    🔄 Check Transaction
+                </button>
+                
+                <div class="result" id="test-result"></div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Setup Instructions:</h3>
+            <ol style="margin-top: 1rem; padding-left: 1.5rem;">
+                <li>Get M-Pesa API credentials from Safaricom Developer Portal</li>
+                <li>Update <code>functions/mpesa-config.js</code> with your credentials</li>
+                <li>Deploy functions: <code>firebase deploy --only functions</code></li>
+                <li>For production, update environment to 'production'</li>
+                <li>Register callback URLs with Safaricom</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // API endpoints
+        const API = {
+    stkPush: 'https://us-central1-arex-ltd-42154393-a701b-fce9f.cloudfunctions.net/mpesaStkPush',
+    b2cPayment: 'https://us-central1-arex-ltd-42154393-a701b-fce9f.cloudfunctions.net/mpesaB2cPayment',
+    checkTransaction: 'https://us-central1-arex-ltd-42154393-a701b-fce9f.cloudfunctions.net/mpesaCheckTransaction',
+    test: 'https://us-central1-arex-ltd-42154393-a701b-fce9f.cloudfunctions.net/mpesaTest'
+};
+            stkPush: '/mpesaStkPush',
+            b2cPayment: '/mpesaB2cPayment',
+            checkTransaction: '/mpesaCheckTransaction',
+            test: '/mpesaTest'
+        };
+        
+        let lastCheckoutRequestID = null;
+        
+        // Update status indicator
+        function updateStatus(connected, message) {
+            const indicator = document.getElementById('api-status');
+            const text = document.getElementById('status-text');
+            
+            indicator.className = 'status-indicator ' + (connected ? 'connected' : 'disconnected');
+            text.textContent = message;
+        }
+        
+        // Show result
+        function showResult(elementId, success, message, data = null) {
+            const resultEl = document.getElementById(elementId);
+            resultEl.className = success ? 'result success' : 'result error';
+            
+            let content = message;
+            if (data) {
+                content += '\n\n' + JSON.stringify(data, null, 2);
+            }
+            
+            resultEl.textContent = content;
+            
+            // Auto-scroll
+            resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Initiate STK Push
+        async function initiateSTK() {
+            const phone = document.getElementById('phone').value;
+            const amount = document.getElementById('amount').value;
+            const reference = document.getElementById('reference').value;
+            const description = document.getElementById('description').value;
+            
+            if (!phone || !amount) {
+                alert('Please enter phone number and amount');
+                return;
+            }
+            
+            showResult('stk-result', true, 'Initiating STK Push...');
+            
+            try {
+                const response = await fetch(API.stkPush, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phone,
+                        amount: amount,
+                        accountReference: reference,
+                        transactionDesc: description
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('stk-result', true, '✅ STK Push initiated successfully!', result);
+                    lastCheckoutRequestID = result.checkoutRequestID;
+                    
+                    // Alert user to check phone
+                    setTimeout(() => {
+                        alert('📱 Please check your phone to complete the M-Pesa payment');
+                    }, 1000);
+                } else {
+                    showResult('stk-result', false, '❌ Failed to initiate STK Push', result);
+                }
+                
+            } catch (error) {
+                showResult('stk-result', false, `❌ Error: ${error.message}`);
+            }
+        }
+        
+        // Initiate B2C Payment
+        async function initiateB2C() {
+            const phone = document.getElementById('b2c-phone').value;
+            const amount = document.getElementById('b2c-amount').value;
+            const remarks = document.getElementById('remarks').value;
+            
+            if (!phone || !amount) {
+                alert('Please enter phone number and amount');
+                return;
+            }
+            
+            showResult('b2c-result', true, 'Initiating B2C payment...');
+            
+            try {
+                const response = await fetch(API.b2cPayment, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phone,
+                        amount: amount,
+                        remarks: remarks
+                    })
+                });
+                
+                const result = await response.json();
+                showResult('b2c-result', result.success, 
+                    result.success ? '✅ B2C payment initiated' : '❌ B2C payment failed', 
+                    result);
+                
+            } catch (error) {
+                showResult('b2c-result', false, `❌ Error: ${error.message}`);
+            }
+        }
+        
+        // Test connection
+        async function testConnection() {
+            showResult('test-result', true, 'Testing M-Pesa connection...');
+            
+            try {
+                const response = await fetch(API.test);
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateStatus(true, 'Connected to M-Pesa API');
+                    showResult('test-result', true, '✅ M-Pesa API connection successful!', result);
+                } else {
+                    updateStatus(false, 'M-Pesa connection failed');
+                    showResult('test-result', false, '❌ M-Pesa API connection failed', result);
+                }
+                
+            } catch (error) {
+                updateStatus(false, 'Connection error');
+                showResult('test-result', false, `❌ Connection error: ${error.message}`);
+            }
+        }
+        
+        // Check transaction status
+        async function checkTransactionStatus() {
+            if (!lastCheckoutRequestID) {
+                alert('No transaction to check. Please initiate an STK Push first.');
+                return;
+            }
+            
+            showResult('test-result', true, 'Checking transaction status...');
+            
+            try {
+                const response = await fetch(API.checkTransaction, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        checkoutRequestID: lastCheckoutRequestID
+                    })
+                });
+                
+                const result = await response.json();
+                showResult('test-result', result.success, 
+                    result.success ? '✅ Transaction status retrieved' : '❌ Failed to get status', 
+                    result);
+                
+            } catch (error) {
+                showResult('test-result', false, `❌ Error: ${error.message}`);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('M-Pesa Demo loaded');
+            
+            // Test connection on load
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>

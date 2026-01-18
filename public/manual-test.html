@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual Function Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background: #d4ffd4; }
+        .error { background: #ffd4d4; }
+        button { margin: 5px; padding: 10px; }
+        pre { background: #f0f0f0; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Manual Function Test</h1>
+    
+    <div id="tests">
+        <div class="test">
+            <h3>1. simpleHealth</h3>
+            <button onclick="testFunction('simpleHealth')">Test</button>
+            <pre id="result-simpleHealth">Click test...</pre>
+        </div>
+        
+        <div class="test">
+            <h3>2. api</h3>
+            <button onclick="testFunction('api')">Test</button>
+            <pre id="result-api">Click test...</pre>
+        </div>
+        
+        <div class="test">
+            <h3>3. financialApi</h3>
+            <button onclick="testFunction('financialApi')">Test</button>
+            <pre id="result-financialApi">Click test...</pre>
+        </div>
+        
+        <div class="test">
+            <h3>4. login (GET test)</h3>
+            <button onclick="testFunction('login')">Test</button>
+            <pre id="result-login">Click test...</pre>
+        </div>
+    </div>
+    
+    <script>
+        const projectId = 'arex-platform-7d3cb';
+        
+        async function testFunction(name) {
+            const url = `https://us-central1-${projectId}.cloudfunctions.net/${name}`;
+            const resultEl = document.getElementById(`result-${name}`);
+            
+            resultEl.innerHTML = `Testing: ${url}\n\nLoading...`;
+            
+            try {
+                console.log(`Testing ${url}`);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                
+                resultEl.innerHTML = `
+                    URL: ${url}
+                    Status: ${response.status} ${response.statusText}
+                    
+                    Response:
+                    ${text}
+                `;
+                
+                resultEl.parentElement.className = response.ok ? 'test success' : 'test error';
+                
+            } catch (error) {
+                resultEl.innerHTML = `
+                    URL: ${url}
+                    
+                    Error:
+                    ${error.message}
+                    
+                    Stack trace:
+                    ${error.stack}
+                `;
+                resultEl.parentElement.className = 'test error';
+            }
+        }
+        
+        // Test all on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                testFunction('simpleHealth');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

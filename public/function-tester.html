@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AREX Function Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #f5f7fa;
+            color: #333;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1a237e;
+            margin-bottom: 1rem;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .status-name {
+            font-weight: bold;
+            font-family: monospace;
+            color: #1a237e;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .status-indicator.connected { background: #4CAF50; }
+        .status-indicator.disconnected { background: #F44336; }
+        .status-indicator.unknown { background: #FF9800; }
+        
+        .status-url {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+            margin-bottom: 1rem;
+        }
+        
+        .test-btn {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .test-btn:hover {
+            background: #283593;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            font-size: 12px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .function-list {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .function-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .function-item:last-child {
+            border-bottom: none;
+        }
+        
+        .function-info h3 {
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        
+        .function-info p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .function-type {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .action-btn {
+            flex: 1;
+            background: white;
+            border: 2px solid #1a237e;
+            color: #1a237e;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #1a237e;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 AREX Firebase Function Tester</h1>
+            <p>Test connection to all your deployed Cloud Functions</p>
+            
+            <div class="quick-actions">
+                <div class="action-btn" onclick="testAllFunctions()">
+                    🔍 Test All Functions
+                </div>
+                <div class="action-btn" onclick="testFinancialFunctions()">
+                    💰 Test Financial Functions
+                </div>
+                <div class="action-btn" onclick="loadFunctionList()">
+                    📋 Refresh Function List
+                </div>
+            </div>
+        </header>
+        
+        <div class="function-list">
+            <h2 style="margin-bottom: 1rem; color: #1a237e;">Available Functions</h2>
+            <div id="function-list">
+                Loading function list...
+            </div>
+        </div>
+        
+        <div class="status-grid" id="status-grid">
+            <!-- Status cards will be loaded here -->
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="test-btn" onclick="testAllFunctions()" style="padding: 12px 24px; font-size: 16px;">
+                🚀 Run Complete Test Suite
+            </button>
+        </div>
+        
+        <div id="test-results" style="
+            margin-top: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        ">
+            <h3 style="color: #1a237e; margin-bottom: 1rem;">Test Results</h3>
+            <div id="results-log" style="
+                font-family: monospace;
+                font-size: 12px;
+                background: #f8f9fa;
+                padding: 1rem;
+                border-radius: 5px;
+                max-height: 400px;
+                overflow-y: auto;
+            ">
+                <!-- Test logs will appear here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load the API configuration and interface -->
+    <script src="/js/arex-api-config.js"></script>
+    <script src="/js/arex-real-api.js"></script>
+    
+    <script>
+        // Log to results area
+        function log(message) {
+            const logDiv = document.getElementById('results-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Load function list
+        async function loadFunctionList() {
+            const listDiv = document.getElementById('function-list');
+            
+            if (!window.arexApiConfig) {
+                listDiv.innerHTML = '❌ API config not loaded';
+                return;
+            }
+            
+            const functions = arexApiConfig.getAvailableFunctions();
+            
+            listDiv.innerHTML = functions.map(func => `
+                <div class="function-item">
+                    <div class="function-info">
+                        <h3>${func.name}</h3>
+                        <p>${func.description}</p>
+                        <div style="font-size: 11px; color: #999; margin-top: 4px;">${func.url}</div>
+                    </div>
+                    <div class="function-type">${func.type}</div>
+                </div>
+            `).join('');
+            
+            log(`Loaded ${functions.length} functions`);
+        }
+        
+        // Test a single function
+        async function testFunction(funcName) {
+            log(`Testing ${funcName}...`);
+            
+            const cardId = `card-${funcName}`;
+            let card = document.getElementById(cardId);
+            
+            if (!card) {
+                // Create status card
+                const grid = document.getElementById('status-grid');
+                const func = arexApiConfig.getAvailableFunctions().find(f => f.name === funcName);
+                
+                if (!func) {
+                    log(`❌ Function ${funcName} not found`);
+                    return;
+                }
+                
+                card = document.createElement('div');
+                card.className = 'status-card';
+                card.id = cardId;
+                card.innerHTML = `
+                    <div class="status-header">
+                        <div class="status-name">${func.name}</div>
+                        <div class="status-indicator unknown" id="indicator-${func.name}"></div>
+                    </div>
+                    <div class="status-url">${func.url}</div>
+                    <div class="result" id="result-${func.name}">Testing...</div>
+                `;
+                grid.appendChild(card);
+            }
+            
+            const indicator = document.getElementById(`indicator-${funcName}`);
+            const resultDiv = document.getElementById(`result-${funcName}`);
+            
+            try {
+                const response = await fetch(func.url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const status = response.status;
+                const ok = response.ok;
+                
+                if (ok) {
+                    indicator.className = 'status-indicator connected';
+                    resultDiv.innerHTML = `✅ HTTP ${status} - Connected`;
+                    resultDiv.style.color = '#4CAF50';
+                    log(`✅ ${funcName}: HTTP ${status} - Connected`);
+                } else {
+                    indicator.className = 'status-indicator disconnected';
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `❌ HTTP ${status} - ${errorText || 'Error'}`;
+                    resultDiv.style.color = '#F44336';
+                    log(`❌ ${funcName}: HTTP ${status} - ${errorText || 'Error'}`);
+                }
+                
+                return { name: funcName, connected: ok, status: status };
+                
+            } catch (error) {
+                indicator.className = 'status-indicator disconnected';
+                resultDiv.innerHTML = `❌ Network Error: ${error.message}`;
+                resultDiv.style.color = '#F44336';
+                log(`❌ ${funcName}: Network error - ${error.message}`);
+                
+                return { name: funcName, connected: false, error: error.message };
+            }
+        }
+        
+        // Test all functions
+        async function testAllFunctions() {
+            log('--- Starting complete function test ---');
+            
+            if (!window.arexApiConfig) {
+                log('❌ API config not loaded');
+                return;
+            }
+            
+            const functions = arexApiConfig.getAvailableFunctions();
+            const results = [];
+            
+            for (const func of functions) {
+                const result = await testFunction(func.name);
+                results.push(result);
+                
+                // Small delay between tests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            const connected = results.filter(r => r.connected).length;
+            const total = results.length;
+            
+            log(`--- Test complete: ${connected}/${total} functions connected ---`);
+            
+            // Summary
+            const summaryDiv = document.getElementById('results-log');
+            summaryDiv.innerHTML += `<br><strong>📊 SUMMARY: ${connected}/${total} functions connected</strong><br>`;
+            
+            results.forEach(result => {
+                const icon = result.connected ? '✅' : '❌';
+                summaryDiv.innerHTML += `${icon} ${result.name}<br>`;
+            });
+        }
+        
+        // Test financial functions specifically
+        async function testFinancialFunctions() {
+            log('--- Testing financial functions ---');
+            
+            const financialFunctions = [
+                'financialApi',
+                'getAgentPaymentSummary',
+                'calculateCommissionCallable',
+                'requestWithdrawal'
+            ];
+            
+            for (const funcName of financialFunctions) {
+                await testFunction(funcName);
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+            log('--- Financial function test complete ---');
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFunctionList();
+            log('Function tester initialized');
+            
+            // Auto-test basic functions
+            setTimeout(() => {
+                testFunction('simpleHealth');
+                testFunction('api');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

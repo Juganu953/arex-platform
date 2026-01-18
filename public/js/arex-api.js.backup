@@ -1,0 +1,241 @@
+// AREX Platform API Integration - With KES Currency
+(function() {
+    'use strict';
+    
+    console.log('🔌 AREX API Integration loading...');
+    
+    // API Configuration
+    const API_CONFIG = {
+        baseURL: '/api',
+        endpoints: {
+            health: '/health',
+            status: '/status',
+            
+            platform: {
+                test: '/platform/test',
+                debug: '/platform/debug',
+                working: '/platform/working',
+                unified: '/platform/unified'
+            },
+            
+            financial: {
+                summary: '/financial/summary',
+                agentPayments: '/financial/agent-payments'
+            },
+            
+            auth: {
+                login: '/auth/login',
+                validate: '/auth/validate'
+            },
+            
+            oauth: {
+                token: '/oauth/token',
+                exchange: '/oauth/exchange'
+            }
+        }
+    };
+    
+    // Create global API object
+    window.arexAPI = {
+        config: API_CONFIG,
+        
+        // Make API call
+        async call(endpoint, data = {}, method = 'GET') {
+            const url = this.config.baseURL + endpoint;
+            
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                };
+                
+                if (method !== 'GET' && data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                console.log(`📤 API Call: ${method} ${url}`);
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                console.log(`📥 API Response: ${response.status}`, result);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ API Error:', error);
+                return {
+                    success: false,
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                };
+            }
+        },
+        
+        // Test API connection
+        async testConnection() {
+            console.log('🧪 Testing API connections...');
+            
+            try {
+                const health = await this.call('/health');
+                const platform = await this.call('/platform/test');
+                const financial = await this.call('/financial/summary');
+                
+                return {
+                    connected: health.success && platform.success,
+                    health: health,
+                    platform: platform,
+                    financial: financial,
+                    timestamp: new Date().toISOString()
+                };
+            } catch (error) {
+                return {
+                    connected: false,
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                };
+            }
+        },
+        
+        // Login helper
+        async login(email, password) {
+            return await this.call('/auth/login', { email, password }, 'POST');
+        },
+        
+        // Get financial data
+        async getFinancialSummary() {
+            return await this.call('/financial/summary');
+        },
+        
+        // Get platform status
+        async getPlatformStatus() {
+            return await this.call('/platform/working');
+        }
+    };
+    
+    // Auto-initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 AREX Platform initialized');
+        
+        // Test API connection on load
+        setTimeout(async () => {
+            const connection = await window.arexAPI.testConnection();
+            if (connection.connected) {
+                console.log('✅ API Connected Successfully!', connection);
+                
+                // Update any status indicator in the page
+                updateConnectionStatus(true);
+                
+                // Load initial data if on dashboard
+                loadInitialData();
+            } else {
+                console.warn('⚠️ API Connection issues:', connection.error);
+                updateConnectionStatus(false);
+            }
+        }, 1000);
+    });
+    
+    function updateConnectionStatus(connected) {
+        // Look for status indicators in the page
+        const indicators = [
+            document.querySelector('[data-api-status]'),
+            document.querySelector('.api-status'),
+            document.getElementById('api-status')
+        ].filter(el => el);
+        
+        indicators.forEach(el => {
+            el.textContent = connected ? 'API Connected' : 'API Disconnected';
+            el.className = connected ? 'api-connected' : 'api-disconnected';
+        });
+        
+        // If no indicator found, add a subtle one
+        if (indicators.length === 0 && connected) {
+            const statusEl = document.createElement('div');
+            statusEl.id = 'arex-api-status';
+            statusEl.style.cssText = `
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                padding: 5px 10px;
+                background: #4CAF50;
+                color: white;
+                border-radius: 3px;
+                font-size: 12px;
+                z-index: 9999;
+                opacity: 0.9;
+            `;
+            statusEl.textContent = '✅ API Connected';
+            document.body.appendChild(statusEl);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusEl.style.opacity = '0.3';
+            }, 5000);
+        }
+    }
+    
+    function loadInitialData() {
+        // Check if we're on a dashboard page
+        const hasDashboardElements = document.querySelector('.dashboard, [data-dashboard], .stats, .metrics');
+        
+        if (hasDashboardElements) {
+            console.log('📊 Loading dashboard data...');
+            
+            // Load financial data
+            window.arexAPI.getFinancialSummary().then(data => {
+                if (data.success) {
+                    updateFinancialDisplay(data);
+                }
+            });
+            
+            // Load platform status
+            window.arexAPI.getPlatformStatus().then(data => {
+                if (data.success) {
+                    updatePlatformStatus(data);
+                }
+            });
+        }
+    }
+    
+    function updateFinancialDisplay(data) {
+        // Update financial elements if they exist
+        const elements = {
+            revenue: document.querySelector('[data-revenue], .revenue, #revenue'),
+            agents: document.querySelector('[data-agents], .agents, #agents'),
+            payments: document.querySelector('[data-payments], .payments, #payments')
+        };
+        
+        if (elements.revenue && data.totalRevenue) {
+            elements.revenue.textContent = formatCurrencyKES(data.totalRevenue);
+        }
+        
+        if (elements.agents && data.activeAgents) {
+            elements.agents.textContent = data.activeAgents + ' agents';
+        }
+        
+        if (elements.payments && data.totalPayments) {
+            elements.payments.textContent = formatCurrencyKES(data.totalPayments);
+        }
+    }
+    
+    function updatePlatformStatus(data) {
+        const statusElements = document.querySelectorAll('.platform-status, [data-platform-status]');
+        statusElements.forEach(el => {
+            if (data.status) {
+                el.textContent = `Status: ${data.status}`;
+                el.style.color = data.status === 'operational' ? '#4CAF50' : '#FF9800';
+            }
+        });
+    }
+    
+    function formatCurrencyKES(amount) {
+        // Format as Kenyan Shillings
+        return 'KES ' + new Intl.NumberFormat('en-KE', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+    
+    console.log('🔌 AREX API Integration ready');
+})();
