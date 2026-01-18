@@ -1,22 +1,57 @@
 # Firebase
-firebase-debug.log
 .firebase/
-
-# Node.js
-node_modules/
-npm-debug.log
-yarn-debug.log
-yarn-error.log
+.firebaserc
+firebase-debug.log
+*.firebaserc
 
 # Environment variables
-.env
+.env*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# OS files
+# Secrets
+secrets/
+keys/
+*.pem
+*.key
+*.p12
+service-account*.json
+firebase-admin*.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# Firebase Functions
+functions/lib/
+functions/.runtimeconfig.json
+functions/coverage/
+functions/.env
+functions/.env.local
+functions/.env.*
+!functions/.env.example
+
+# Build directories
+dist/
+build/
+.coverage/
+.out/
+.next/
+
+# System files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # IDE
@@ -24,18 +59,92 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+*~
 
-# Build directories
-dist/
-build/
-coverage/
+# Logs
+logs/
+*.log
 
-# Cloud Function specific
-.gcloudignore
-.gcloud/
+# Firebase emulators
+.firebase/emulators.data
+.firebase/emulators-debug.log
 
-# Sensitive files
-service-account-key.json
-*.pem
-*.key
-firebase-config.js
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Test coverage
+.coverage
+.nyc_output
+htmlcov/
+
+# Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Cloud Shell backups
+cloudshell_backup/
+
+# Backup directories
+*-backup-*/
+backup-*/
+
+# Specific backup files
+public-backup-*/
+
+# Test files (can be regenerated)
+test-*.html
+test-*.js
+test-*.sh
+
+# Scripts that can be regenerated
+setup-*.sh
+deploy-*.sh
+get-*.sh
+verify-*.sh
+update-*.sh
+fix-*.js
+final-*.sh
+
+# Temporary M-Pesa files
+.mpesa-env
+arexpaymentapi-env.json
+env-vars-template.json
+
+# Server files (if not needed)
+server.js
+
+# Firebase Hosting proxy config
+firebase.hosting.proxy.json
+
+# Documentation files that can be regenerated
+frontend-readiness.md
+
+# Firebase Functions - ignore all except essential
+functions/*.js
+!functions/index.js
+!functions/package.json
+!functions/.env.example
+!functions/mpesa-simple-working.js
+!functions/mpesa-callback-fixed.js
+!functions/mpesa-stk-fixed.js
+!functions/mpesa-hybrid.js
+!functions/mpesa-diagnostic.js
+
+# Keep only working versions
+functions/mpesa-simple-working.js
+functions/mpesa-callback-fixed.js
+functions/mpesa-stk-fixed.js
+functions/mpesa-hybrid.js
+functions/mpesa-diagnostic.js
+functions/index.js
+functions/package.json
+functions/.env.example
